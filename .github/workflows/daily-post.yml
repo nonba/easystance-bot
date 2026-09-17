@@ -2,8 +2,8 @@ name: Daily X post
 
 on:
   schedule:
-    # 毎日 UTC 11:00 = JST 20:00
-    - cron: "0 11 * * *"
+    # 毎日 UTC 11:07 = JST 20:07（ちょうど00分だと混雑で遅延・スキップされやすいためずらしている）
+    - cron: "7 11 * * *"
   workflow_dispatch: {}
 
 permissions:
