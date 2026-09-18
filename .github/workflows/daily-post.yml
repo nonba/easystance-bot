@@ -1,4 +1,4 @@
-name: Daily draft notification
+name: Daily draft list notification
 
 on:
   schedule:
@@ -7,7 +7,6 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: write
   issues: write
 
 jobs:
@@ -25,32 +24,24 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Pick today's draft
-        id: draft
+      - name: List all drafts
+        id: list
         run: |
-          TEXT=$(python pick_draft.py)
+          TEXT=$(python list_drafts.py)
           {
             echo "text<<DRAFT_EOF"
             echo "$TEXT"
             echo "DRAFT_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Create issue with the draft
+      - name: Create issue with the full list
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue create \
-            --title "$(date +%Y-%m-%d) の投稿案" \
-            --body "${{ steps.draft.outputs.text }}
+            --title "$(date +%Y-%m-%d) の投稿候補一覧" \
+            --body "${{ steps.list.outputs.text }}
 
           ---
-          内容を確認・修正して、ご自身でXに投稿してください。" \
+          好きなものを選んで、修正してからご自身でXに投稿してください。" \
             --assignee "${{ github.repository_owner }}"
-
-      - name: Save rotation state back to the repo
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add state.json
-          git diff --cached --quiet || git commit -m "chore: update draft rotation state [skip ci]"
-          git push
