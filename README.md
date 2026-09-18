@@ -1,61 +1,45 @@
-# easystanceapp 自動投稿ツール
+# easystanceapp 投稿案ツール
 
-posts.txt に登録した文面を、1回実行するたびに1件ずつ順番に（使い切ったらシャッフルして再スタート）Xへ投稿するツールです。
+毎日20:07（JST）に、`posts.txt` から1件を選んでGitHub Issueとして通知するツールです。
+Xへは自動投稿せず、内容を確認・修正してから自分でXに投稿する運用です。
 
-## セットアップ
+GitHub Actions（GitHubのクラウド機能）で動くので、PCの電源が入っていなくても毎日実行されます。
 
-1. Python 3.9以上がインストールされていること
-2. 依存パッケージをインストール
+## 使い方
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. 毎日20:07になると、このリポジトリに「YYYY-MM-DD の投稿案」というIssueが自動で作成されます
+2. GitHubの通知（メール等）が届くので、内容を確認します
+3. 気になる部分を直して、Xアプリ／サイトから自分で投稿します
+4. Issueはそのままでも、確認済みとして閉じてもどちらでも構いません
 
-3. `.env.example` をコピーして `.env` を作成し、X Developer Portal で取得した4つの値を入力
+## 投稿の候補（ネタ）を編集する
 
-   ```bash
-   cp .env.example .env
-   ```
+`posts.txt` をGitHubのサイト上で直接編集するのが簡単です。
 
-   `.env` は絶対にGitや他人と共有しないでください。
+1. https://github.com/nonba/easystance-bot/blob/master/posts.txt を開く
+2. 右上の鉛筆マーク（編集アイコン）をクリック
+3. 文章を書き換えて、下の方にある緑の「Commit changes」ボタンを押す
 
-4. 動作確認（実際には投稿されません）
-
-   ```bash
-   python poster.py --dry-run
-   ```
-
-5. 本番投稿
-
-   ```bash
-   python poster.py
-   ```
-
-## 投稿内容を編集する
-
-`posts.txt` をメモ帳などで開いて自由に編集してください。「----------」の区切り線までが1つの投稿（1ツイート）です。
-文章の書き換え・追加・削除、いずれも区切り線を保ったまま自由にどうぞ。
+「----------」の区切り線までが1つの候補です。区切り線を保ったまま、文章の書き換え・追加・削除は自由にどうぞ。
 280字（日本語は目安140字前後）を超えないよう注意してください。
-全件投稿し終えると自動的にシャッフルされて最初からまた回ります。
+全件使い終えると自動的にシャッフルされて最初からまた回ります。
 
-## 毎日自動実行する（Windows タスクスケジューラ）
+## 手動で今すぐ候補を出したいとき
 
-PowerShellを管理者として開き、以下を実行（時刻は9:00の例。パスは環境に合わせて書き換えてください）:
+リポジトリの Actions タブ → 「Daily draft notification」→ 「Run workflow」で、いつでも手動実行できます。
+https://github.com/nonba/easystance-bot/actions
 
-```powershell
-$action = New-ScheduledTaskAction -Execute "python.exe" -Argument "poster.py" -WorkingDirectory "C:\path\to\easystance-bot"
-$trigger = New-ScheduledTaskTrigger -Daily -At 9:00am
-Register-ScheduledTask -TaskName "EasyStanceAutoPost" -Action $action -Trigger $trigger -Description "easystanceapp 毎日自動投稿"
+## ローカルで動作確認したいとき
+
+```bash
+pip install -r requirements.txt
+python pick_draft.py
 ```
 
-タスクの確認・削除:
+を実行すると、次の候補文がその場に表示されます（GitHub Issueは作られません）。
 
-```powershell
-Get-ScheduledTask -TaskName "EasyStanceAutoPost"
-Unregister-ScheduledTask -TaskName "EasyStanceAutoPost" -Confirm:$false
-```
+## 参考：以前のXへの自動投稿機能について
 
-## ログ
-
-投稿の成功・失敗は `post_log.txt` に記録されます。失敗した場合はまずここを確認してください
-（キーの権限がRead and Writeになっているか、.envの値が正しいか、など）。
+`poster.py` にはXへ直接投稿する機能も残していますが、現在の自動実行では使っていません
+（`.env` にX APIキーを設定すれば `python poster.py` で手動投稿は可能です）。
+再び完全自動投稿に戻したくなったら、いつでも相談してください。
